@@ -1,13 +1,12 @@
 import z from "zod";
 import { protectedProcedure, router } from "../index";
 import { TRPCError } from "@trpc/server";
-import { db } from "@artery/db";
+import { and, db, eq } from "@artery/db";
 import {
   organization,
   organizationMember,
 } from "@artery/db/schema/organization";
 import { generateUUID } from "@artery/shared";
-import { and, eq } from "drizzle-orm";
 
 export const organizationRouter = router({
   // Retrieves all workspaces for the authenticated user
