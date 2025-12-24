@@ -1,5 +1,5 @@
 import { db } from "@artery/db";
-import * as schema from "@artery/db/schema/auth";
+import * as schema from "@artery/db/schema/index";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
