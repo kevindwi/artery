@@ -10,6 +10,7 @@ import {
 import { template } from "./template";
 import { deviceState } from "./deviceState";
 import { telemetry } from "./telemetry";
+import { createId } from "@paralleldrive/cuid2";
 
 export const dataTypes = ["INT", "DOUBLE", "BOOL", "STRING"] as const;
 export const dataTypeEnum = pgEnum("data_type", dataTypes);
@@ -17,7 +18,9 @@ export const dataTypeEnum = pgEnum("data_type", dataTypes);
 export const datastream = pgTable(
   "datastream",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
     templateId: text("template_id")
       .notNull()
       .references(() => template.id, { onDelete: "cascade" }),

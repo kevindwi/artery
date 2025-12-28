@@ -12,6 +12,7 @@ import { template } from "./template";
 import { user } from "./user";
 import { deviceState } from "./deviceState";
 import { telemetry } from "./telemetry";
+import { createId } from "@paralleldrive/cuid2";
 
 export const deviceStatus = ["ONLINE", "OFFLINE"] as const;
 export const deviceStatusEnum = pgEnum("device_status", deviceStatus);
@@ -19,7 +20,9 @@ export const deviceStatusEnum = pgEnum("device_status", deviceStatus);
 export const device = pgTable(
   "device",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),

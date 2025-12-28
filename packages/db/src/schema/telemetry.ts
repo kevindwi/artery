@@ -11,11 +11,14 @@ import {
 } from "drizzle-orm/pg-core";
 import { device } from "./device";
 import { datastream } from "./datastream";
+import { createId } from "@paralleldrive/cuid2";
 
 export const telemetry = pgTable(
   "telemetry",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
     deviceId: text("device_id")
       .notNull()
       .references(() => device.id, { onDelete: "cascade" }),

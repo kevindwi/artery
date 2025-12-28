@@ -4,9 +4,12 @@ import { organization } from "./organization";
 import { user } from "./user";
 import { datastream } from "./datastream";
 import { device } from "./device";
+import { createId } from "@paralleldrive/cuid2";
 
 export const template = pgTable("template", {
-  id: text("id").primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
   organizationId: text("organization_id")
     .notNull()
     .references(() => organization.id, { onDelete: "cascade" }),

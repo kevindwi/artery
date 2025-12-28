@@ -10,12 +10,15 @@ import {
 import { user } from "./user";
 import { template } from "./template";
 import { device } from "./device";
+import { createId } from "@paralleldrive/cuid2";
 
 export const memberRoles = ["ADMIN", "OWNER", "MEMBER"] as const;
 export const memberRoleEnum = pgEnum("role", memberRoles);
 
 export const organization = pgTable("organization", {
-  id: text("id").primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
   name: text("name").notNull(),
   slug: text("slug").unique().notNull(),
   description: text("description"),
@@ -33,7 +36,9 @@ export const organization = pgTable("organization", {
 export const organizationMember = pgTable(
   "organization_member",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
@@ -51,7 +56,9 @@ export const organizationMember = pgTable(
 export const organizationInvitation = pgTable(
   "organization_invitation",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
