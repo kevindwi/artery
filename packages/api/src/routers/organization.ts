@@ -1,12 +1,11 @@
-import z from "zod";
-import { protectedProcedure, router } from "../index";
-import { TRPCError } from "@trpc/server";
 import { and, db, eq } from "@artery/db";
 import {
   organization,
   organizationMember,
 } from "@artery/db/schema/organization";
-import { generateUUID } from "@artery/shared";
+import { TRPCError } from "@trpc/server";
+import z from "zod";
+import { protectedProcedure, router } from "../index";
 
 export const organizationRouter = router({
   // Retrieves all workspaces for the authenticated user
@@ -77,7 +76,6 @@ export const organizationRouter = router({
           .insert(organization)
           .values({
             ...input,
-            id: generateUUID(),
             ownerId: userId,
           })
           .returning();
@@ -90,7 +88,6 @@ export const organizationRouter = router({
         }
 
         await tx.insert(organizationMember).values({
-          id: generateUUID(),
           organizationId: orgRow.id,
           userId,
           role: "OWNER",
@@ -120,7 +117,14 @@ export const organizationRouter = router({
         ),
       });
 
-      if (!member || (member.role !== "ADMIN" && member.role !== "OWNER")) {
+      if (!member) {
+        throw new TRPCError({
+          message: "Organization not found or you're not a member.",
+          code: "FORBIDDEN",
+        });
+      }
+
+      if (member.role !== "ADMIN" && member.role !== "OWNER") {
         throw new TRPCError({
           message: "Only admin or owner can modify this organization.",
           code: "FORBIDDEN",
@@ -167,7 +171,7 @@ export const organizationRouter = router({
 
       if (!result) {
         throw new TRPCError({
-          message: `Unable to delete organization`,
+          message: "Unable to delete organization",
           code: "INTERNAL_SERVER_ERROR",
         });
       }
