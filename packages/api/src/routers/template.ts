@@ -1,6 +1,10 @@
 import z from "zod";
 import { protectedProcedure, router } from "../index";
-import { templateService } from "../services/template";
+import {
+  createTemplateSchema,
+  templateService,
+  updateTemplateSchema,
+} from "../services/template";
 
 export const templateRouter = router({
   all: protectedProcedure
@@ -27,31 +31,14 @@ export const templateRouter = router({
       );
     }),
   create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(5, "Template name is required"),
-        organizationId: z.string().min(12, "Id is required"),
-        hardwarePlatform: z.string("Hardware platform is required"),
-        connectionType: z.string("Connection type is required"),
-        description: z.string().optional(),
-      }),
-    )
+    .input(createTemplateSchema)
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.session.session;
 
       return await templateService.create(userId, input);
     }),
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().min(12, "Id is required"),
-        name: z.string().min(5, "Template name is required"),
-        organizationId: z.string().min(12, "Organization id is required"),
-        hardwarePlatform: z.string("Hardware platform is required"),
-        connectionType: z.string("Connection type is required"),
-        description: z.string().optional(),
-      }),
-    )
+    .input(updateTemplateSchema)
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.session.session;
 

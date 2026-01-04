@@ -2,6 +2,19 @@ import { and, db, eq } from "@artery/db";
 import { template } from "@artery/db/schema/template";
 import { TRPCError } from "@trpc/server";
 import { assertMemberRole } from "./organization";
+import z from "zod";
+
+export const createTemplateSchema = z.object({
+  name: z.string().min(5, "Template name is required"),
+  organizationId: z.string().min(12, "Id is required"),
+  hardwarePlatform: z.string().min(1, "Hardware platform is required"),
+  connectionType: z.string().min(1, "Connection type is required"),
+  description: z.string().optional(),
+});
+
+export const updateTemplateSchema = createTemplateSchema.extend({
+  id: z.string().min(12, "Id is required"),
+});
 
 export const templateService = {
   getAll: async (userId: string, orgId: string) => {
@@ -11,7 +24,11 @@ export const templateService = {
       where: eq(template.organizationId, orgId),
     });
   },
-  getById: async (userId: string, organizationId: string, templateId: string) => {
+  getById: async (
+    userId: string,
+    organizationId: string,
+    templateId: string,
+  ) => {
     await assertMemberRole(userId, organizationId, ["OWNER", "ADMIN", "MEMBER"]);
 
     const templateDetail = await db.query.template.findFirst({
@@ -32,13 +49,7 @@ export const templateService = {
   },
   create: async (
     userId: string,
-    data: {
-      name: string;
-      organizationId: string;
-      hardwarePlatform: string;
-      connectionType: string;
-      description?: string;
-    },
+    data: z.infer<typeof createTemplateSchema>,
   ) => {
     await assertMemberRole(userId, data.organizationId, [
       "OWNER",
@@ -67,13 +78,7 @@ export const templateService = {
   update: async (
     userId: string,
     templateId: string,
-    data: {
-      name: string;
-      organizationId: string;
-      hardwarePlatform: string;
-      connectionType: string;
-      description?: string;
-    },
+    data: z.infer<typeof createTemplateSchema>,
   ) => {
     await assertMemberRole(userId, data.organizationId, ["OWNER", "ADMIN"]);
 
@@ -86,7 +91,21 @@ export const templateService = {
     return result;
   },
   delete: async (userId: string, templateId: string) => {
-    await assertMemberRole(userId, templateId, ["OWNER"]);
+    const tmpl = await db.query.template.findFirst({
+      where: eq(template.id, templateId),
+      columns: {
+        organizationId: true,
+      },
+    });
+
+    if (!tmpl) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Template not found",
+      });
+    }
+
+    await assertMemberRole(userId, tmpl.organizationId, ["OWNER"]);
 
     const [result] = await db
       .delete(template)
