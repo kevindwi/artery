@@ -1,9 +1,18 @@
 import { and, db, eq } from "@artery/db";
-import {
-  organization,
-  organizationMember,
-} from "@artery/db/schema/organization";
+import { organization, organizationMember } from "@artery/db/schema/organization";
 import { TRPCError } from "@trpc/server";
+import z from "zod";
+
+export const createOrganizationSchema = z.object({
+  name: z.string().min(5, "Organization name is required"),
+  slug: z.string().min(5, "Slug is required"),
+  description: z.string().optional(),
+  logo: z.string().optional(),
+});
+
+export const updateOrganizationSchema = createOrganizationSchema.extend({
+  id: z.string(),
+});
 
 export async function assertMemberRole(
   userId: string,
@@ -69,10 +78,7 @@ export const organizationService = {
     }
     return member.organization;
   },
-  create: async (
-    userId: string,
-    data: { name: string; slug: string; description?: string; logo?: string },
-  ) => {
+  create: async (userId: string, data: z.infer<typeof createOrganizationSchema>) => {
     return await db.transaction(async (tx) => {
       const [orgRow] = await tx
         .insert(organization)
@@ -97,7 +103,7 @@ export const organizationService = {
   update: async (
     userId: string,
     orgId: string,
-    data: { name: string; slug: string; description?: string; logo?: string },
+    data: z.infer<typeof createOrganizationSchema>,
   ) => {
     await assertMemberRole(userId, orgId, ["OWNER", "ADMIN"]);
 
