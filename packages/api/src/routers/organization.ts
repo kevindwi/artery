@@ -1,6 +1,10 @@
 import z from "zod";
 import { protectedProcedure, router } from "../index";
-import { organizationService } from "../services/organization";
+import {
+  createOrganizationSchema,
+  organizationService,
+  updateOrganizationSchema,
+} from "../services/organization";
 
 export const organizationRouter = router({
   // Retrieves all workspaces for the authenticated user
@@ -17,34 +21,19 @@ export const organizationRouter = router({
       return await organizationService.getById(userId, input.organizationId);
     }),
   create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(5, "Organization name is required"),
-        slug: z.string().min(5, "Slug is required"),
-        description: z.string().optional(),
-        logo: z.string().optional(),
-      }),
-    )
+    .input(createOrganizationSchema)
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.session.session;
 
       return await organizationService.create(userId, input);
     }),
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().min(12),
-        name: z.string().min(5, "Organization name is required"),
-        slug: z.string().min(5, "Slug is required"),
-        description: z.string().optional(),
-        logo: z.string().optional(),
-      }),
-    )
+    .input(updateOrganizationSchema)
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.session.session;
 
-      const { id, ...updateData } = input;
-      return await organizationService.update(userId, id, updateData);
+      const { id, ...data } = input;
+      return await organizationService.update(userId, id, data);
     }),
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(12) }))

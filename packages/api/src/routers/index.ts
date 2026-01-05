@@ -1,7 +1,7 @@
 import { protectedProcedure, publicProcedure, router } from "../index";
 import { organizationRouter } from "./organization";
 import { templateRouter } from "./template";
-import { todoRouter } from "./todo";
+import { datastreamRouter } from "./datastream";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
@@ -13,8 +13,8 @@ export const appRouter = router({
       user: ctx.session.user,
     };
   }),
-  todo: todoRouter,
   organization: organizationRouter,
   template: templateRouter,
+  datastream: datastreamRouter,
 });
 export type AppRouter = typeof appRouter;
