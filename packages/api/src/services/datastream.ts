@@ -137,7 +137,7 @@ export const datastreamService = {
       .returning();
     return updatedItem;
   },
-  delete: async (datastreamId: string, activeOrgId: string) => {
+  delete: async (activeOrgId: string, datastreamId: string) => {
     const ds = await db.query.datastream.findFirst({
       where: eq(datastream.id, datastreamId),
       with: {

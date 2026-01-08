@@ -57,11 +57,16 @@ export const templateService = {
 
     return templateRow;
   },
-  update: async (activeOrgId: string, templateId: string, userId: string, data: z.infer<typeof createTemplateSchema>) => {
+  update: async (
+    activeOrgId: string,
+    templateId: string,
+    userId: string,
+    data: z.infer<typeof createTemplateSchema>,
+  ) => {
     const tmpl = await db.query.template.findFirst({
       where: and(
         eq(template.id, templateId),
-        eq(template.organizationId, activeOrgId)
+        eq(template.organizationId, activeOrgId),
       ),
     });
 
@@ -87,7 +92,7 @@ export const templateService = {
     const tmpl = await db.query.template.findFirst({
       where: and(
         eq(template.id, templateId),
-        eq(template.organizationId, activeOrgId)
+        eq(template.organizationId, activeOrgId),
       ),
     });
 

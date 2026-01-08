@@ -1,11 +1,16 @@
 import { z } from "zod";
-import { organizationProcedure, router } from "../index";
+import {
+  canCreateDatastream,
+  canDeleteDatastream,
+  canUpdateDatastream,
+  organizationProcedure,
+  router,
+} from "../index";
 import {
   createDatastreamSchema,
   datastreamService,
   updateDatastreamSchema,
 } from "../services/datastream";
-import { TRPCError } from "@trpc/server";
 
 export const datastreamRouter = router({
   all: organizationProcedure
@@ -19,40 +24,19 @@ export const datastreamRouter = router({
       const { id, templateId } = input;
       return await datastreamService.getById(id, templateId);
     }),
-  create: organizationProcedure
+  create: canCreateDatastream
     .input(createDatastreamSchema)
     .mutation(async ({ ctx, input }) => {
-      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
-        throw new TRPCError({
-          message: "You do not have permission to perform this action.",
-          code: "FORBIDDEN",
-        });
-      }
-
       return await datastreamService.create(ctx.activeOrgId, input);
     }),
-  update: organizationProcedure
+  update: canUpdateDatastream
     .input(updateDatastreamSchema)
     .mutation(async ({ ctx, input }) => {
-      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
-        throw new TRPCError({
-          message: "You do not have permission to perform this action.",
-          code: "FORBIDDEN",
-        });
-      }
-
       return await datastreamService.update(ctx.activeOrgId, input);
     }),
-  delete: organizationProcedure
+  delete: canDeleteDatastream
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
-        throw new TRPCError({
-          message: "You do not have permission to perform this action.",
-          code: "FORBIDDEN",
-        });
-      }
-
-      return await datastreamService.delete(input.id, ctx.activeOrgId);
+      return await datastreamService.delete(ctx.activeOrgId, input.id);
     }),
 });

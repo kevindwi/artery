@@ -1,17 +1,21 @@
 import z from "zod";
-import { organizationProcedure, router } from "../index";
+import {
+  canCreateTemplate,
+  canDeleteTemplate,
+  canUpdateTemplate,
+  organizationProcedure,
+  router,
+} from "../index";
 import {
   createTemplateSchema,
   templateService,
   updateTemplateSchema,
 } from "../services/template";
-import { TRPCError } from "@trpc/server";
 
 export const templateRouter = router({
-  all: organizationProcedure
-    .query(async ({ ctx }) => {
-      return await templateService.getAll(ctx.activeOrgId);
-    }),
+  all: organizationProcedure.query(async ({ ctx }) => {
+    return await templateService.getAll(ctx.activeOrgId);
+  }),
   byId: organizationProcedure
     .input(
       z.object({
@@ -23,43 +27,31 @@ export const templateRouter = router({
 
       return await templateService.getById(ctx.activeOrgId, templateId);
     }),
-  create: organizationProcedure
+  create: canCreateTemplate
     .input(createTemplateSchema)
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.session.session;
 
-      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
-        throw new TRPCError({
-          message: "You do not have permission to perform this action.",
-          code: "FORBIDDEN",
-        });
-      }
-
-      return await templateService.create(userId, input);
+      return await templateService.create(userId, {
+        ...input,
+        organizationId: ctx.activeOrgId,
+      });
     }),
-  update: organizationProcedure
+  update: canUpdateTemplate
     .input(updateTemplateSchema)
     .mutation(async ({ ctx, input }) => {
-      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
-        throw new TRPCError({
-          message: "You do not have permission to perform this action.",
-          code: "FORBIDDEN",
-        });
-      }
-
       const { id, ...updateData } = input;
-      return await templateService.update(ctx.activeOrgId, id, ctx.session.session.userId, updateData);
+
+      return await templateService.update(
+        ctx.activeOrgId,
+        id,
+        ctx.session.session.userId,
+        updateData,
+      );
     }),
-  delete: organizationProcedure
+  delete: canDeleteTemplate
     .input(z.object({ id: z.string().min(12) }))
     .mutation(async ({ ctx, input }) => {
-      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
-        throw new TRPCError({
-          message: "You do not have permission to perform this action.",
-          code: "FORBIDDEN",
-        });
-      }
-
       return await templateService.delete(ctx.activeOrgId, input.id);
     }),
 });

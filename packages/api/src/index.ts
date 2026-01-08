@@ -2,6 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 
 import type { Context } from "./context";
 import { db } from "@artery/db";
+import { auth } from "@artery/auth";
 
 export const t = initTRPC.context<Context>().create();
 
@@ -66,3 +67,33 @@ export const organizationProcedure = t.procedure.use(async ({ ctx, next }) => {
     },
   });
 });
+
+export const requirePermission = (permissions: { [resource: string]: string[] }) => {
+  return organizationProcedure.use(async ({ ctx, next }) => {
+    const hasPermission = await auth.api.hasPermission({
+      headers: ctx.session.session, // Pass session
+      body: { permissions },
+    });
+
+    if (!hasPermission) {
+      throw new TRPCError({
+        message: "You do not have permission to perform this action.",
+        code: "FORBIDDEN",
+      });
+    }
+
+    return next({ ctx });
+  });
+};
+
+export const canCreateTemplate = requirePermission({ template: ["create"] });
+export const canUpdateTemplate = requirePermission({ template: ["update"] });
+export const canDeleteTemplate = requirePermission({ template: ["delete"] });
+
+export const canCreateDatastream = requirePermission({ datastream: ["create"] });
+export const canUpdateDatastream = requirePermission({ datastream: ["update"] });
+export const canDeleteDatastream = requirePermission({ datastream: ["delete"] });
+
+export const canCreateDevice = requirePermission({ device: ["create"] });
+export const canUpdateDevice = requirePermission({ device: ["update"] });
+export const canDeleteDevice = requirePermission({ device: ["delete"] });

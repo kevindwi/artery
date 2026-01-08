@@ -1,13 +1,16 @@
 import z from "zod";
-import { protectedProcedure, router } from "../index";
+import { organizationProcedure, router } from "../index";
 import { deviceService } from "../services/device";
 
 export const deviceRouter = router({
-  all: protectedProcedure
+  all: organizationProcedure
     .input(z.object({ organizationId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
-      return await deviceService.getAll(userId, input.organizationId);
+    .query(async ({ ctx }) => {
+      return await deviceService.getAll(ctx.activeOrgId);
     }),
-  byId: protectedProcedure.input(z.object({ id: z.string() })).query(async () => {}),
+  byId: organizationProcedure
+    .input(z.object({ deviceId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return await deviceService.getById(ctx.activeOrgId, input.deviceId);
+    }),
 });
