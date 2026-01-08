@@ -1,7 +1,6 @@
 import { and, db, eq } from "@artery/db";
 import { template } from "@artery/db/schema/template";
 import { TRPCError } from "@trpc/server";
-import { assertMemberRole } from "./organization";
 import z from "zod";
 
 export const createTemplateSchema = z.object({
@@ -17,20 +16,12 @@ export const updateTemplateSchema = createTemplateSchema.extend({
 });
 
 export const templateService = {
-  getAll: async (userId: string, orgId: string) => {
-    await assertMemberRole(userId, orgId, ["OWNER", "ADMIN", "MEMBER"]);
-
+  getAll: async (orgId: string) => {
     return await db.query.template.findMany({
       where: eq(template.organizationId, orgId),
     });
   },
-  getById: async (
-    userId: string,
-    organizationId: string,
-    templateId: string,
-  ) => {
-    await assertMemberRole(userId, organizationId, ["OWNER", "ADMIN", "MEMBER"]);
-
+  getById: async (organizationId: string, templateId: string) => {
     const templateDetail = await db.query.template.findFirst({
       where: and(
         eq(template.id, templateId),
@@ -47,16 +38,7 @@ export const templateService = {
 
     return templateDetail;
   },
-  create: async (
-    userId: string,
-    data: z.infer<typeof createTemplateSchema>,
-  ) => {
-    await assertMemberRole(userId, data.organizationId, [
-      "OWNER",
-      "ADMIN",
-      "MEMBER",
-    ]);
-
+  create: async (userId: string, data: z.infer<typeof createTemplateSchema>) => {
     const [templateRow] = await db
       .insert(template)
       .values({
@@ -75,27 +57,12 @@ export const templateService = {
 
     return templateRow;
   },
-  update: async (
-    userId: string,
-    templateId: string,
-    data: z.infer<typeof createTemplateSchema>,
-  ) => {
-    await assertMemberRole(userId, data.organizationId, ["OWNER", "ADMIN"]);
-
-    const [result] = await db
-      .update(template)
-      .set(data)
-      .where(eq(template.id, templateId))
-      .returning();
-
-    return result;
-  },
-  delete: async (userId: string, templateId: string) => {
+  update: async (activeOrgId: string, templateId: string, userId: string, data: z.infer<typeof createTemplateSchema>) => {
     const tmpl = await db.query.template.findFirst({
-      where: eq(template.id, templateId),
-      columns: {
-        organizationId: true,
-      },
+      where: and(
+        eq(template.id, templateId),
+        eq(template.organizationId, activeOrgId)
+      ),
     });
 
     if (!tmpl) {
@@ -105,7 +72,31 @@ export const templateService = {
       });
     }
 
-    await assertMemberRole(userId, tmpl.organizationId, ["OWNER"]);
+    const [result] = await db
+      .update(template)
+      .set({
+        ...data,
+        updatedBy: userId,
+      })
+      .where(eq(template.id, templateId))
+      .returning();
+
+    return result;
+  },
+  delete: async (activeOrgId: string, templateId: string) => {
+    const tmpl = await db.query.template.findFirst({
+      where: and(
+        eq(template.id, templateId),
+        eq(template.organizationId, activeOrgId)
+      ),
+    });
+
+    if (!tmpl) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Template not found",
+      });
+    }
 
     const [result] = await db
       .delete(template)

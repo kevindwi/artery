@@ -1,55 +1,65 @@
 import z from "zod";
-import { protectedProcedure, router } from "../index";
+import { organizationProcedure, router } from "../index";
 import {
   createTemplateSchema,
   templateService,
   updateTemplateSchema,
 } from "../services/template";
+import { TRPCError } from "@trpc/server";
 
 export const templateRouter = router({
-  all: protectedProcedure
-    .input(z.object({ organizationId: z.string().min(12, "Id is required") }))
-    .query(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
-
-      return await templateService.getAll(userId, input.organizationId);
+  all: organizationProcedure
+    .query(async ({ ctx }) => {
+      return await templateService.getAll(ctx.activeOrgId);
     }),
-  byId: protectedProcedure
+  byId: organizationProcedure
     .input(
       z.object({
-        organizationId: z.string().min(12),
         templateId: z.string().min(12),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
+      const { templateId } = input;
 
-      return await templateService.getById(
-        userId,
-        input.organizationId,
-        input.templateId,
-      );
+      return await templateService.getById(ctx.activeOrgId, templateId);
     }),
-  create: protectedProcedure
+  create: organizationProcedure
     .input(createTemplateSchema)
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.session.session;
 
+      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
+        throw new TRPCError({
+          message: "You do not have permission to perform this action.",
+          code: "FORBIDDEN",
+        });
+      }
+
       return await templateService.create(userId, input);
     }),
-  update: protectedProcedure
+  update: organizationProcedure
     .input(updateTemplateSchema)
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
+      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
+        throw new TRPCError({
+          message: "You do not have permission to perform this action.",
+          code: "FORBIDDEN",
+        });
+      }
 
       const { id, ...updateData } = input;
-      return await templateService.update(userId, id, updateData);
+      return await templateService.update(ctx.activeOrgId, id, ctx.session.session.userId, updateData);
     }),
-  delete: protectedProcedure
+  delete: organizationProcedure
     .input(z.object({ id: z.string().min(12) }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
+      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
+        throw new TRPCError({
+          message: "You do not have permission to perform this action.",
+          code: "FORBIDDEN",
+        });
+      }
 
-      return await templateService.delete(userId, input.id);
+      return await templateService.delete(ctx.activeOrgId, input.id);
     }),
 });
