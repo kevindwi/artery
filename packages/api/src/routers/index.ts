@@ -1,6 +1,7 @@
 import { protectedProcedure, publicProcedure, router } from "../index";
 import { templateRouter } from "./template";
 import { datastreamRouter } from "./datastream";
+import { deviceRouter } from "./device";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
@@ -14,5 +15,6 @@ export const appRouter = router({
   }),
   template: templateRouter,
   datastream: datastreamRouter,
+  device: deviceRouter,
 });
 export type AppRouter = typeof appRouter;

@@ -1,15 +1,8 @@
 import { relations } from "drizzle-orm";
-import {
-  pgTable,
-  text,
-  timestamp,
-  index,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { user } from "./user";
 import { template } from "./template";
 import { device } from "./device";
-import { createId } from "@paralleldrive/cuid2";
 
 export const organization = pgTable(
   "organization",
