@@ -1,11 +1,7 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { account, session } from "./auth";
-import {
-  organization,
-  organizationInvitation,
-  organizationMember,
-} from "./organization";
+import { invitation, member } from "./organization";
 import { template } from "./template";
 import { device } from "./device";
 
@@ -25,14 +21,9 @@ export const user = pgTable("user", {
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
-  organizationMembers: many(organizationMember),
-  organizationsOwned: many(organization, {
-    relationName: "ownedOrganizations",
-  }),
-  organizationInvitationsCreated: many(organizationInvitation, {
-    relationName: "createdInvitations",
-  }),
-  templatesCreated: many(template, { relationName: "createdTemplates" }),
-  templatesUpdated: many(template, { relationName: "updatedTemplates" }),
-  devicesCreated: many(device, { relationName: "createdDevices" }),
+  members: many(member),
+  invitations: many(invitation),
+  templatesCreated: many(template),
+  templatesUpdated: many(template),
+  devicesCreated: many(device),
 }));

@@ -1,56 +1,58 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../index";
-import { datastreamService } from "../services/datastream";
-import { dataTypes } from "@artery/db/schema/datastream";
-
-const createDatastreamSchema = z.object({
-  templateId: z.string(),
-  name: z.string(),
-  pin: z.string(),
-  dataType: z.enum(dataTypes),
-  min: z.number().optional(),
-  max: z.number().optional(),
-  defaultValue: z.string().optional(),
-});
-
-const updateDatastreamSchema = createDatastreamSchema
-  .omit({
-    templateId: true,
-  })
-  .extend({
-    id: z.string(),
-  });
+import { organizationProcedure, router } from "../index";
+import {
+  createDatastreamSchema,
+  datastreamService,
+  updateDatastreamSchema,
+} from "../services/datastream";
+import { TRPCError } from "@trpc/server";
 
 export const datastreamRouter = router({
-  all: protectedProcedure
+  all: organizationProcedure
     .input(z.object({ templateId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
-      return await datastreamService.getAll(userId, input.templateId);
+    .query(async ({ input }) => {
+      return await datastreamService.getAll(input.templateId);
     }),
-  byId: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
-      return await datastreamService.getById(userId, input.id);
+  byId: organizationProcedure
+    .input(z.object({ id: z.string(), templateId: z.string() }))
+    .query(async ({ input }) => {
+      const { id, templateId } = input;
+      return await datastreamService.getById(id, templateId);
     }),
-  create: protectedProcedure
+  create: organizationProcedure
     .input(createDatastreamSchema)
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
-      return await datastreamService.create(userId, input);
+      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
+        throw new TRPCError({
+          message: "You do not have permission to perform this action.",
+          code: "FORBIDDEN",
+        });
+      }
+
+      return await datastreamService.create(ctx.activeOrgId, input);
     }),
-  update: protectedProcedure
+  update: organizationProcedure
     .input(updateDatastreamSchema)
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
-      const { id, ...data } = input;
-      return await datastreamService.update(userId, id, data);
+      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
+        throw new TRPCError({
+          message: "You do not have permission to perform this action.",
+          code: "FORBIDDEN",
+        });
+      }
+
+      return await datastreamService.update(ctx.activeOrgId, input);
     }),
-  delete: protectedProcedure
+  delete: organizationProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx.session.session;
-      return await datastreamService.delete(userId, input.id);
+      if (!["OWNER", "ADMIN"].includes(ctx.memberRole)) {
+        throw new TRPCError({
+          message: "You do not have permission to perform this action.",
+          code: "FORBIDDEN",
+        });
+      }
+
+      return await datastreamService.delete(input.id, ctx.activeOrgId);
     }),
 });

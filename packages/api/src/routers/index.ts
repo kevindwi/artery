@@ -1,5 +1,4 @@
 import { protectedProcedure, publicProcedure, router } from "../index";
-import { organizationRouter } from "./organization";
 import { templateRouter } from "./template";
 import { datastreamRouter } from "./datastream";
 
@@ -13,7 +12,6 @@ export const appRouter = router({
       user: ctx.session.user,
     };
   }),
-  organization: organizationRouter,
   template: templateRouter,
   datastream: datastreamRouter,
 });
