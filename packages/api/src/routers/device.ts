@@ -12,6 +12,7 @@ import {
   deviceService,
   updateDeviceSchema,
 } from "../services/device";
+import { deviceStatus } from "@artery/db/schema/device";
 
 export const deviceRouter = router({
   all: organizationProcedure.query(async ({ ctx }) => {
@@ -52,8 +53,9 @@ export const deviceRouter = router({
     .mutation(async ({ ctx, input }) => {
       return await deviceService.regenerateToken(ctx.activeOrgId, input.id);
     }),
+
   updateStatus: deviceProcedure
-    .input(z.object({ id: z.string().min(12), status: z.string() }))
+    .input(z.object({ status: z.enum(deviceStatus) }))
     .mutation(async ({ ctx, input }) => {
       return await deviceService.updateStatus(ctx.device.id, input.status);
     }),

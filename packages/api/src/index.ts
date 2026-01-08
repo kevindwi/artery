@@ -68,6 +68,41 @@ export const organizationProcedure = t.procedure.use(async ({ ctx, next }) => {
   });
 });
 
+export const deviceProcedure = t.procedure.use(async ({ ctx, next }) => {
+  if (!ctx.context) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Missing context",
+    });
+  }
+  const authHeader = ctx.context.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Missing or invalid authorization header",
+    });
+  }
+
+  const token = authHeader.substring(7);
+  const device = await db.query.device.findFirst({
+    where: (table, { eq }) => eq(table.authToken, token),
+  });
+
+  if (!device) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invalid token",
+    });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      device,
+    },
+  });
+});
+
 export const requirePermission = (permissions: { [resource: string]: string[] }) => {
   return organizationProcedure.use(async ({ ctx, next }) => {
     const hasPermission = await auth.api.hasPermission({
