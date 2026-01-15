@@ -39,6 +39,32 @@ export const deviceService = {
 
     return deviceDetail;
   },
+  // Validate device exists and token is not revoked
+  validateDevice: async (deviceId: string) => {
+    const deviceRecord = await db.query.device.findFirst({
+      where: eq(device.id, deviceId),
+      with: {
+        template: true,
+      },
+    });
+
+    if (!deviceRecord) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `Device not found: ${deviceId}`,
+      });
+    }
+
+    if (deviceRecord.tokenRevoked) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: `Device token revoked: ${deviceId}`,
+      });
+    }
+
+    return deviceRecord;
+  },
+
   create: async (
     userId: string,
     data: z.infer<typeof createDeviceSchema> & {
