@@ -45,25 +45,33 @@ export const datastreamService = {
     });
   },
   getById: async (id: string, templateId: string) => {
-    const ds = await db.query.datastream.findFirst({
-      where: and(eq(datastream.id, id), eq(datastream.templateId, templateId)),
-      with: {
-        template: {
-          columns: {
-            organizationId: true,
-          },
-        },
-      },
+    const datastreamRecord = await db.query.datastream.findFirst({
+      where: and(eq(datastream.templateId, templateId), eq(datastream.id, id)),
     });
 
-    if (!ds) {
+    if (!datastreamRecord) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: "Datastream not found",
+        message: `Datastream with id: ${id} not found in template: ${templateId}`,
       });
     }
 
-    return ds;
+    return datastreamRecord;
+  },
+  // Validate datastream exists for the template and pin
+  validateDatastream: async (templateId: string, pin: string) => {
+    const datastreamRecord = await db.query.datastream.findFirst({
+      where: and(eq(datastream.templateId, templateId), eq(datastream.pin, pin)),
+    });
+
+    if (!datastreamRecord) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `Datastream not found for pin: ${pin} in template: ${templateId}`,
+      });
+    }
+
+    return datastreamRecord;
   },
   create: async (
     activeOrgId: string,
