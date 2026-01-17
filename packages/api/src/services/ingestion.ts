@@ -1,14 +1,25 @@
 import { db, eq } from "@artery/db";
 import { device } from "@artery/db/schema/device";
 import { telemetry } from "@artery/db/schema/telemetry";
-import { datastreamService } from "./datastream";
 import { deviceState } from "@artery/db/schema/deviceState";
+import { datastreamService } from "./datastream";
 import { deviceService } from "./device";
+import z from "zod";
 
-export type TelemetryPayload = {
+export const telemetryPayloadSchema = z.object({
+  pin: z.string(),
+  value: z.union([z.number(), z.boolean(), z.string()]),
+  timestamp: z.number().optional(),
+});
+
+export type TelemetryPayload = z.infer<typeof telemetryPayloadSchema>;
+
+export type IngestionResult = {
+  success: boolean;
+  deviceId: string;
   pin: string;
-  value: number | string | boolean;
-  timestamp?: number;
+  timestamp: Date;
+  duration: number;
 };
 
 export const ingestionService = {
@@ -86,6 +97,22 @@ export const ingestionService = {
       timestamp: recordTimestamp,
       duration,
     };
+  },
+
+  // Batch ingestion - process multiple telemetry records at once
+  ingestBatch: async (deviceId: string, payloads: TelemetryPayload[]) => {
+    const results: IngestionResult[] = [];
+
+    for (const payload of payloads) {
+      try {
+        const result = await ingestionService.ingest(deviceId, payload);
+        results.push(result);
+      } catch (error) {
+        console.error(`Batch ingestion error for pin ${payload.pin}:`, error);
+      }
+    }
+
+    return results;
   },
 
   // Format value based on datastream type

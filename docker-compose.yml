@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # MQTT Broker (EMQX)
+  emqx:
+    image: emqx/emqx:5.8.3
+    container_name: artery-mqtt
+    ports:
+      - "1883:1883"      # MQTT
+      - "8883:8883"      # MQTT over SSL
+      - "8083:8083"      # MQTT over WebSocket
+      - "18083:18083"    # EMQX Dashboard
+    environment:
+      - "EMQX_NODE__NAME=emqx@node1"
+      - "EMQX_CLUSTER__DISCOVERY_STRATEGY=static"
+      - "EMQX_DASHBOARD__DEFAULT_PASSWORD=public"
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+    restart: unless-stopped
+    networks:
+      - artery-network
+
+  # PostgreSQL Database (with TimescaleDB for time-series data)
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: artery-postgres
+    environment:
+      POSTGRES_DB: artery
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - artery-network
+
+  # Redis (for caching and future message queue)
+  redis:
+    image: redis:7-alpine
+    container_name: artery-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - artery-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  emqx_data:
+  emqx_log:
+
+networks:
+  artery-network:
+    driver: bridge

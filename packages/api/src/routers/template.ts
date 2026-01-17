@@ -40,13 +40,10 @@ export const templateRouter = router({
   update: canUpdateTemplate
     .input(updateTemplateSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, ...updateData } = input;
-
       return await templateService.update(
         ctx.activeOrgId,
-        id,
         ctx.session.session.userId,
-        updateData,
+        input,
       );
     }),
   delete: canDeleteTemplate
