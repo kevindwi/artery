@@ -62,17 +62,15 @@ export const ingestionService = {
           deviceId: deviceRecord.id,
           datastreamId: datastreamRecord.id,
           ...formattedValue,
-          updatedAt: reportedAt,
           reportedAt,
         })
-        .onConflictDoUpdate({
-          target: [deviceState.deviceId, deviceState.datastreamId],
-          set: {
-            ...formattedValue,
-            updatedAt: reportedAt,
-            reportedAt,
-          },
-        });
+      // .onConflictDoUpdate({
+      //   target: [deviceState.deviceId, deviceState.datastreamId],
+      //   set: {
+      //     ...formattedValue,
+      //     reportedAt,
+      //   },
+      // });
 
       // Update device lastSeen and status
       await tx

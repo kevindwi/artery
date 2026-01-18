@@ -5,7 +5,6 @@ import z from "zod";
 
 export const createTemplateSchema = z.object({
   name: z.string().min(5, "Template name is required"),
-  organizationId: z.string().min(12, "Id is required"),
   hardwarePlatform: z.string().min(1, "Hardware platform is required"),
   connectionType: z.string().min(1, "Connection type is required"),
   description: z.string().optional(),
@@ -38,7 +37,10 @@ export const templateService = {
 
     return templateDetail;
   },
-  create: async (userId: string, data: z.infer<typeof createTemplateSchema>) => {
+  create: async (
+    userId: string,
+    data: z.infer<typeof createTemplateSchema> & { organizationId: string },
+  ) => {
     const [templateRow] = await db
       .insert(template)
       .values({
@@ -73,13 +75,14 @@ export const templateService = {
       });
     }
 
+    const { id, ...updateData } = data;
     const [result] = await db
       .update(template)
       .set({
-        ...data,
+        ...updateData,
         updatedBy: userId,
       })
-      .where(eq(template.id, tmpl.id))
+      .where(and(eq(template.id, tmpl.id), eq(template.organizationId, activeOrgId)))
       .returning();
 
     return result;

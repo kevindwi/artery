@@ -26,15 +26,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   });
 });
 
-export const organizationProcedure = t.procedure.use(async ({ ctx, next }) => {
-  if (!ctx.session) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Authentication required",
-      cause: "No session",
-    });
-  }
-
+export const organizationProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const activeOrgId = ctx.session.session.activeOrganizationId;
   const userId = ctx.session.session.userId;
 
@@ -61,7 +53,6 @@ export const organizationProcedure = t.procedure.use(async ({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      session: ctx.session,
       activeOrgId,
       memberRole: member.role,
     },
@@ -106,11 +97,14 @@ export const deviceProcedure = t.procedure.use(async ({ ctx, next }) => {
 export const requirePermission = (permissions: { [resource: string]: string[] }) => {
   return organizationProcedure.use(async ({ ctx, next }) => {
     const hasPermission = await auth.api.hasPermission({
-      headers: ctx.session.session, // Pass session
-      body: { permissions },
+      headers: ctx.context.req.raw.headers, // Pass actual headers
+      body: {
+        permissions,
+        organizationId: ctx.activeOrgId, // Explicitly pass organizationId
+      },
     });
 
-    if (!hasPermission) {
+    if (!hasPermission?.success) {
       throw new TRPCError({
         message: "You do not have permission to perform this action.",
         code: "FORBIDDEN",
