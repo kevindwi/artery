@@ -15,6 +15,7 @@ import { Route as authSigninRouteImport } from './routes/(auth)/signin'
 import { Route as appAppRouteRouteImport } from './routes/(app)/app/route'
 import { Route as appAppIndexRouteImport } from './routes/(app)/app/index'
 import { Route as appAppDashboardRouteImport } from './routes/(app)/app/dashboard'
+import { Route as appAppTemplatesIndexRouteImport } from './routes/(app)/app/templates/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const appAppDashboardRoute = appAppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => appAppRouteRoute,
 } as any)
+const appAppTemplatesIndexRoute = appAppTemplatesIndexRouteImport.update({
+  id: '/templates/',
+  path: '/templates/',
+  getParentRoute: () => appAppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/app/dashboard': typeof appAppDashboardRoute
   '/app/': typeof appAppIndexRoute
+  '/app/templates/': typeof appAppTemplatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/app/dashboard': typeof appAppDashboardRoute
   '/app': typeof appAppIndexRoute
+  '/app/templates': typeof appAppTemplatesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,12 +78,20 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/(app)/app/dashboard': typeof appAppDashboardRoute
   '/(app)/app/': typeof appAppIndexRoute
+  '/(app)/app/templates/': typeof appAppTemplatesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/signin' | '/signup' | '/app/dashboard' | '/app/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/signin'
+    | '/signup'
+    | '/app/dashboard'
+    | '/app/'
+    | '/app/templates/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/signin' | '/signup' | '/app/dashboard' | '/app'
+  to: '/' | '/signin' | '/signup' | '/app/dashboard' | '/app' | '/app/templates'
   id:
     | '__root__'
     | '/'
@@ -84,6 +100,7 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/(app)/app/dashboard'
     | '/(app)/app/'
+    | '/(app)/app/templates/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -137,17 +154,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appAppDashboardRouteImport
       parentRoute: typeof appAppRouteRoute
     }
+    '/(app)/app/templates/': {
+      id: '/(app)/app/templates/'
+      path: '/templates'
+      fullPath: '/app/templates/'
+      preLoaderRoute: typeof appAppTemplatesIndexRouteImport
+      parentRoute: typeof appAppRouteRoute
+    }
   }
 }
 
 interface appAppRouteRouteChildren {
   appAppDashboardRoute: typeof appAppDashboardRoute
   appAppIndexRoute: typeof appAppIndexRoute
+  appAppTemplatesIndexRoute: typeof appAppTemplatesIndexRoute
 }
 
 const appAppRouteRouteChildren: appAppRouteRouteChildren = {
   appAppDashboardRoute: appAppDashboardRoute,
   appAppIndexRoute: appAppIndexRoute,
+  appAppTemplatesIndexRoute: appAppTemplatesIndexRoute,
 }
 
 const appAppRouteRouteWithChildren = appAppRouteRoute._addFileChildren(

@@ -13,6 +13,7 @@ import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import {
   AudioWaveform,
+  Bookmark,
   CalendarClock,
   Command,
   GalleryVerticalEnd,
@@ -30,6 +31,11 @@ const data = {
       url: "/app",
       icon: House,
       isActive: true,
+    },
+    {
+      title: "Templates",
+      url: "/app/templates",
+      icon: Bookmark,
     },
     {
       title: "Devices",
