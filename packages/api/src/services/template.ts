@@ -16,9 +16,20 @@ export const updateTemplateSchema = createTemplateSchema.extend({
 
 export const templateService = {
   getAll: async (orgId: string) => {
-    return await db.query.template.findMany({
+    const templates = await db.query.template.findMany({
       where: eq(template.organizationId, orgId),
+      with: {
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
     });
+    return templates;
   },
   getById: async (organizationId: string, templateId: string) => {
     const templateDetail = await db.query.template.findFirst({
