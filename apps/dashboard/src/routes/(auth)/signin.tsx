@@ -3,6 +3,13 @@ import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/(auth)/signin")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "Sign in | Artery"
+      }
+    ]
+  })
 });
 
 function RouteComponent() {
