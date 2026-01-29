@@ -1,17 +1,19 @@
 import { and, db, eq } from "@artery/db";
-import { z } from "zod";
 import { device } from "@artery/db/schema/device";
-import { TRPCError } from "@trpc/server";
 import { init } from "@paralleldrive/cuid2";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 export const createDeviceSchema = z.object({
   name: z.string().min(1),
   templateId: z.string(),
 });
 
-export const updateDeviceSchema = createDeviceSchema.extend({
-  id: z.string(),
-});
+export const updateDeviceSchema = createDeviceSchema
+  .omit({ templateId: true })
+  .extend({
+    id: z.string(),
+  });
 
 const createId = init({
   random: Math.random,
@@ -23,11 +25,43 @@ export const deviceService = {
   getAll: async (organizationId: string) => {
     return await db.query.device.findMany({
       where: eq(device.organizationId, organizationId),
+      with: {
+        template: {
+          columns: {
+            id: true,
+            name: true,
+          },
+        },
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
     });
   },
   getById: async (organizationId: string, deviceId: string) => {
     const deviceDetail = await db.query.device.findFirst({
       where: and(eq(device.id, deviceId), eq(device.organizationId, organizationId)),
+      with: {
+        template: {
+          columns: {
+            id: true,
+            name: true,
+          },
+        },
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
     });
 
     if (!deviceDetail) {
@@ -80,11 +114,11 @@ export const deviceService = {
     return newDevice;
   },
   update: async (activeOrgId: string, data: z.infer<typeof updateDeviceSchema>) => {
-    const dv = await db.query.datastream.findFirst({
+    const deviceRecord = await db.query.device.findFirst({
       where: eq(device.id, data.id),
     });
 
-    if (!dv) {
+    if (!deviceRecord) {
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "Device not found",

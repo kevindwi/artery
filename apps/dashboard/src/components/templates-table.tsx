@@ -13,7 +13,13 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  Loader2Icon,
+  MoreHorizontal,
+  Trash2Icon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -34,98 +40,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-// import { formatDateTime } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Link } from "@tanstack/react-router";
+import { Textarea } from "./ui/textarea";
+import { useMutation } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+import { toast } from "sonner";
 
-const data: Template[] = [
-  {
-    id: "TPL-001",
-    name: "Smart Home Automation",
-    hardware_platform: "ESP32",
-    connection_type: "Wi-Fi",
-    description: "Sistem otomasi rumah pintar",
-    created_at: "2022-01-01T12:00:00.000Z",
-    created_by: [
-      {
-        id: "OWN-001",
-        email: "john.doe@example.com",
-        name: "John Doe",
-        image: "https://example.com/john-doe.jpg",
-      },
-    ],
-  },
-  {
-    id: "TPL-002",
-    name: "IoT Monitoring Sistem",
-    hardware_platform: "Raspberry Pi",
-    connection_type: "Ethernet",
-    description: "Sistem monitoring IoT untuk industri",
-    created_at: "2022-02-01T12:00:00.000Z",
-    created_by: [
-      {
-        id: "OWN-002",
-        email: "jane.doe@example.com",
-        name: "Jane Doe",
-        image: null,
-      },
-    ],
-  },
-  {
-    id: "TPL-003",
-    name: "Smart City",
-    hardware_platform: "Arduino",
-    connection_type: "LoRaWAN",
-    description: "Sistem smart city untuk kota pintar",
-    created_at: "2022-03-01T12:00:00.000Z",
-    created_by: [
-      {
-        id: "OWN-001",
-        email: "john.doe@example.com",
-        name: "John Doe",
-        image: "https://example.com/john-doe.jpg",
-      },
-      {
-        id: "OWN-003",
-        email: "bob.smith@example.com",
-        name: "Bob Smith",
-        image: "https://example.com/bob-smith.jpg",
-      },
-    ],
-  },
-  {
-    id: "TPL-004",
-    name: "Industrial Automation",
-    hardware_platform: "PLC",
-    connection_type: "Modbus",
-    description: "Sistem otomasi industri",
-    created_at: "2022-04-01T12:00:00.000Z",
-    created_by: [
-      {
-        id: "OWN-002",
-        email: "jane.doe@example.com",
-        name: "Jane Doe",
-        image: null,
-      },
-    ],
-  },
-  {
-    id: "TPL-005",
-    name: "Smart Agriculture",
-    hardware_platform: "ESP8266",
-    connection_type: "Wi-Fi",
-    description: "Sistem smart agriculture untuk pertanian pintar",
-    created_at: "2022-05-01T12:00:00.000Z",
-    created_by: [
-      {
-        id: "OWN-003",
-        email: "bob.smith@example.com",
-        name: "Bob Smith",
-        image: "https://example.com/bob-smith.jpg",
-      },
-    ],
-  },
-];
-
-type Owner = {
+export type Owner = {
   id: string;
   email: string;
   name: string;
@@ -135,151 +68,171 @@ type Owner = {
 export type Template = {
   id: string;
   name: string;
-  hardware_platform: string;
-  connection_type: string;
-  description: string;
-  created_at: string;
-  created_by: Owner[];
+  description: string | null;
+  createdAt: string;
+  updatedAt: string;
+  organizationId: string;
+  hardwarePlatform: string | null;
+  connectionType: string | null;
+  createdBy: Owner | null;
+  updatedBy: string | null;
 };
 
 interface TemplatesTableProps {
   data: Template[];
+  onActionSuccess: () => void;
 }
 
-const columns: ColumnDef<Template>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          className="px-0 m-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Device ID
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div>{row.getValue("id")}</div>,
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Device Name
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="flex gap-x-2 items-center">{row.getValue("name")}</div>
-    ),
-  },
-  {
-    accessorKey: "hardware_platform",
-    header: "Hardware Platform",
-    cell: ({ row }) => (
-      <div className="flex gap-x-2 items-center">
-        {row.getValue("hardware_platform")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "connection_type",
-    header: "Connection Type",
-    cell: ({ row }) => (
-      <div className="flex gap-x-2 items-center">
-        {row.getValue("connection_type")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "description",
-    header: "Description",
-    cell: ({ row }) => (
-      <div className="flex gap-x-2 items-center">{row.getValue("description")}</div>
-    ),
-  },
-  {
-    accessorKey: "created_at",
-    header: "Created at",
-    cell: ({ row }) => (
-      <div className="flex gap-x-2 items-center">{row.getValue("created_at")}</div>
-    ),
-  },
-  {
-    accessorKey: "created_by",
-    header: "Created by",
-    cell: ({ row }) => {
-      const owners = row.getValue("created_by") as Owner[];
-      return (
-        <div className="flex flex-col gap-1">
-          {owners.map((owner) => (
-            <span key={owner.id} className="text-sm">
-              {owner.name}
-            </span>
-          ))}
-        </div>
-      );
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: () => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-
-export function TemplatesTable({ data = [] }: TemplatesTableProps) {
+export function TemplatesTable({ data = [], onActionSuccess }: TemplatesTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
     {},
   );
   const [rowSelection, setRowSelection] = React.useState({});
+
+  const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
+  const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(
+    null,
+  );
+
+  const deleteMutation = useMutation(
+    trpc.template.delete.mutationOptions({
+      onSuccess: () => {
+        onActionSuccess();
+        toast.success("Template has been deleted");
+        setIsDeleteOpen(false);
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to delete template");
+      },
+    }),
+  );
+
+  const columns: ColumnDef<Template>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          className="px-0 m-0"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Template ID
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div>
+          <Link
+            to="/app/templates/$templateId"
+            params={{ templateId: row.getValue("id") as string }}
+            className="font-mono text-xs underline"
+          >
+            {row.getValue("id")}
+          </Link>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Template Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "hardwarePlatform",
+      header: "Hardware Platform",
+      cell: ({ row }) => <div>{row.getValue("hardwarePlatform") ?? "-"}</div>,
+    },
+    {
+      accessorKey: "connectionType",
+      header: "Connection Type",
+      cell: ({ row }) => <div>{row.getValue("connectionType") ?? "-"}</div>,
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+      cell: ({ row }) => (
+        <Textarea readOnly rows={2} className="min-h-12 h-12">
+          {row.getValue("description") ?? "-"}
+        </Textarea>
+      ),
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Created at",
+      cell: ({ row }) => (
+        <div>{new Date(row.getValue("createdAt")).toLocaleDateString()}</div>
+      ),
+    },
+    {
+      accessorKey: "createdBy",
+      header: "Created by",
+      cell: ({ row }) => {
+        const owner = row.getValue("createdBy") as Owner | null;
+        return <span>{owner?.name ?? "Unknown"}</span>;
+      },
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const template = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                className="text-destructive"
+                onSelect={() => {
+                  setSelectedTemplate(template);
+                  setIsDeleteOpen(true);
+                }}
+              >
+                Delete Template
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   const table = useReactTable({
     data,
@@ -304,7 +257,7 @@ export function TemplatesTable({ data = [] }: TemplatesTableProps) {
     <div className="w-full">
       <div className="flex items-center pb-4">
         <Input
-          placeholder="Filter devices..."
+          placeholder="Search templates..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("name")?.setFilterValue(event.target.value)
@@ -314,25 +267,23 @@ export function TemplatesTable({ data = [] }: TemplatesTableProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
+              Columns <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
               .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                  >
-                    {column.id.replace(/_/g, " ")}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
+              .map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  className="capitalize"
+                  checked={column.getIsVisible()}
+                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                >
+                  {column.id.replace(/([A-Z])/g, " $1")}
+                </DropdownMenuCheckboxItem>
+              ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -341,18 +292,16 @@ export function TemplatesTable({ data = [] }: TemplatesTableProps) {
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -380,6 +329,43 @@ export function TemplatesTable({ data = [] }: TemplatesTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Delete Alert Dialog */}
+      <AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+              <Trash2Icon />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete template?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{selectedTemplate?.name}</strong>.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="bg-transparent">
+            <AlertDialogCancel disabled={deleteMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={(e) => {
+                e.preventDefault();
+                if (selectedTemplate)
+                  deleteMutation.mutate({ id: selectedTemplate.id });
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending && (
+                <>
+                  <Loader2Icon className="h-4 w-4 animate-spin" />
+                </>
+              )}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
