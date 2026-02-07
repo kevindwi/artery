@@ -1,6 +1,7 @@
-import mqtt from "mqtt";
-import { ingestionService } from "@artery/api/services/ingestion";
 import type { TelemetryPayload } from "@artery/api/services/ingestion";
+import { ingestionService } from "@artery/api/services/ingestion";
+import { websocketService } from "@artery/api/services/websocket";
+import mqtt from "mqtt";
 
 /**
  * MQTT Worker for Artery IoT Platform
@@ -163,8 +164,21 @@ class MqttWorker {
         `Telemetry processed: device=${deviceId}, pin=${payload.pin}, duration=${result.duration}ms`,
       );
 
-      // TODO: Broadcast to WebSocket clients for real-time updates
-      // await websocketService.broadcast(deviceId, result);
+      // Broadcast to WebSocket clients for real-time updates
+      try {
+        await websocketService.broadcastTelemetry({
+          deviceId,
+          datastreamId: payload.pin,
+          timestamp: new Date().toISOString(),
+          value: payload.value,
+        });
+        console.log(
+          `Telemetry broadcasted to WebSocket clients: device=${deviceId}, pin=${payload.pin}`,
+        );
+      } catch (error) {
+        console.error("Error broadcasting to WebSocket clients:", error);
+        // Continue without WebSocket - don't fail the telemetry processing
+      }
     } catch (error) {
       console.error(`Error processing telemetry for device ${deviceId}:`, error);
       // TODO: Send to dead letter queue for retry

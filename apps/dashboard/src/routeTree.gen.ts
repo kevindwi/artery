@@ -16,6 +16,9 @@ import { Route as appAppRouteRouteImport } from './routes/(app)/app/route'
 import { Route as appAppIndexRouteImport } from './routes/(app)/app/index'
 import { Route as appAppDashboardRouteImport } from './routes/(app)/app/dashboard'
 import { Route as appAppTemplatesIndexRouteImport } from './routes/(app)/app/templates/index'
+import { Route as appAppDevicesIndexRouteImport } from './routes/(app)/app/devices/index'
+import { Route as appAppTemplatesTemplateIdRouteImport } from './routes/(app)/app/templates/$templateId'
+import { Route as appAppDevicesDeviceIdRouteImport } from './routes/(app)/app/devices/$deviceId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +55,22 @@ const appAppTemplatesIndexRoute = appAppTemplatesIndexRouteImport.update({
   path: '/templates/',
   getParentRoute: () => appAppRouteRoute,
 } as any)
+const appAppDevicesIndexRoute = appAppDevicesIndexRouteImport.update({
+  id: '/devices/',
+  path: '/devices/',
+  getParentRoute: () => appAppRouteRoute,
+} as any)
+const appAppTemplatesTemplateIdRoute =
+  appAppTemplatesTemplateIdRouteImport.update({
+    id: '/templates/$templateId',
+    path: '/templates/$templateId',
+    getParentRoute: () => appAppRouteRoute,
+  } as any)
+const appAppDevicesDeviceIdRoute = appAppDevicesDeviceIdRouteImport.update({
+  id: '/devices/$deviceId',
+  path: '/devices/$deviceId',
+  getParentRoute: () => appAppRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +79,9 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/app/dashboard': typeof appAppDashboardRoute
   '/app/': typeof appAppIndexRoute
+  '/app/devices/$deviceId': typeof appAppDevicesDeviceIdRoute
+  '/app/templates/$templateId': typeof appAppTemplatesTemplateIdRoute
+  '/app/devices/': typeof appAppDevicesIndexRoute
   '/app/templates/': typeof appAppTemplatesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -68,6 +90,9 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/app/dashboard': typeof appAppDashboardRoute
   '/app': typeof appAppIndexRoute
+  '/app/devices/$deviceId': typeof appAppDevicesDeviceIdRoute
+  '/app/templates/$templateId': typeof appAppTemplatesTemplateIdRoute
+  '/app/devices': typeof appAppDevicesIndexRoute
   '/app/templates': typeof appAppTemplatesIndexRoute
 }
 export interface FileRoutesById {
@@ -78,6 +103,9 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/(app)/app/dashboard': typeof appAppDashboardRoute
   '/(app)/app/': typeof appAppIndexRoute
+  '/(app)/app/devices/$deviceId': typeof appAppDevicesDeviceIdRoute
+  '/(app)/app/templates/$templateId': typeof appAppTemplatesTemplateIdRoute
+  '/(app)/app/devices/': typeof appAppDevicesIndexRoute
   '/(app)/app/templates/': typeof appAppTemplatesIndexRoute
 }
 export interface FileRouteTypes {
@@ -89,9 +117,21 @@ export interface FileRouteTypes {
     | '/signup'
     | '/app/dashboard'
     | '/app/'
+    | '/app/devices/$deviceId'
+    | '/app/templates/$templateId'
+    | '/app/devices/'
     | '/app/templates/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/signin' | '/signup' | '/app/dashboard' | '/app' | '/app/templates'
+  to:
+    | '/'
+    | '/signin'
+    | '/signup'
+    | '/app/dashboard'
+    | '/app'
+    | '/app/devices/$deviceId'
+    | '/app/templates/$templateId'
+    | '/app/devices'
+    | '/app/templates'
   id:
     | '__root__'
     | '/'
@@ -100,6 +140,9 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/(app)/app/dashboard'
     | '/(app)/app/'
+    | '/(app)/app/devices/$deviceId'
+    | '/(app)/app/templates/$templateId'
+    | '/(app)/app/devices/'
     | '/(app)/app/templates/'
   fileRoutesById: FileRoutesById
 }
@@ -161,18 +204,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appAppTemplatesIndexRouteImport
       parentRoute: typeof appAppRouteRoute
     }
+    '/(app)/app/devices/': {
+      id: '/(app)/app/devices/'
+      path: '/devices'
+      fullPath: '/app/devices/'
+      preLoaderRoute: typeof appAppDevicesIndexRouteImport
+      parentRoute: typeof appAppRouteRoute
+    }
+    '/(app)/app/templates/$templateId': {
+      id: '/(app)/app/templates/$templateId'
+      path: '/templates/$templateId'
+      fullPath: '/app/templates/$templateId'
+      preLoaderRoute: typeof appAppTemplatesTemplateIdRouteImport
+      parentRoute: typeof appAppRouteRoute
+    }
+    '/(app)/app/devices/$deviceId': {
+      id: '/(app)/app/devices/$deviceId'
+      path: '/devices/$deviceId'
+      fullPath: '/app/devices/$deviceId'
+      preLoaderRoute: typeof appAppDevicesDeviceIdRouteImport
+      parentRoute: typeof appAppRouteRoute
+    }
   }
 }
 
 interface appAppRouteRouteChildren {
   appAppDashboardRoute: typeof appAppDashboardRoute
   appAppIndexRoute: typeof appAppIndexRoute
+  appAppDevicesDeviceIdRoute: typeof appAppDevicesDeviceIdRoute
+  appAppTemplatesTemplateIdRoute: typeof appAppTemplatesTemplateIdRoute
+  appAppDevicesIndexRoute: typeof appAppDevicesIndexRoute
   appAppTemplatesIndexRoute: typeof appAppTemplatesIndexRoute
 }
 
 const appAppRouteRouteChildren: appAppRouteRouteChildren = {
   appAppDashboardRoute: appAppDashboardRoute,
   appAppIndexRoute: appAppIndexRoute,
+  appAppDevicesDeviceIdRoute: appAppDevicesDeviceIdRoute,
+  appAppTemplatesTemplateIdRoute: appAppTemplatesTemplateIdRoute,
+  appAppDevicesIndexRoute: appAppDevicesIndexRoute,
   appAppTemplatesIndexRoute: appAppTemplatesIndexRoute,
 }
 
