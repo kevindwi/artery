@@ -15,11 +15,6 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-
-// import { useForm } from "@tanstack/react-form";
-// import { toast } from "sonner";
-// import z from "zod";
-
 import { authClient, signIn } from "@/lib/auth-client";
 import Loader from "./loader";
 import { useState } from "react";
@@ -29,7 +24,6 @@ export function SigninForm({ className, ...props }: React.ComponentProps<"div">)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  // const [rememberMe, setRememberMe] = useState(false);
 
   const { isPending } = authClient.useSession();
 

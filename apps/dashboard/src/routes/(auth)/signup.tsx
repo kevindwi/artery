@@ -3,6 +3,13 @@ import { SignupForm } from "@/components/sign-up-form";
 
 export const Route = createFileRoute("/(auth)/signup")({
   component: RouteComponent,
+  head: () => ({
+    meta: [
+      {
+        title: "Sign up | Artery"
+      }
+    ]
+  })
 });
 
 function RouteComponent() {

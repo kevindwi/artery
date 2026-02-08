@@ -1,11 +1,6 @@
-import { TemplatesTable } from "@/components/templates-table";
 import { Button } from "@/components/ui/button";
-import { trpc } from "@/utils/trpc";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { BookmarkIcon, Loader2, Plus } from "lucide-react";
-import { CreateTemplateDialog } from "@/components/create-template-dialog";
-import { useState } from "react";
+import { Loader2Icon, RouterIcon } from "lucide-react";
 import {
   Empty,
   EmptyContent,
@@ -14,13 +9,17 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+import { CreateDeviceDialog } from "@/components/create-device-dialog";
+import { DevicesTable } from "@/components/devices-table";
 
-export const Route = createFileRoute("/(app)/app/templates/")({
+export const Route = createFileRoute("/(app)/app/devices/")({
   component: RouteComponent,
   head: () => ({
     meta: [
       {
-        title: "Templates | Artery",
+        title: "Devices | Artery",
       },
     ],
   }),
@@ -29,51 +28,51 @@ export const Route = createFileRoute("/(app)/app/templates/")({
 function RouteComponent() {
   const queryClient = useQueryClient();
 
-  const { data: templates, isLoading } = useQuery(trpc.template.all.queryOptions());
+  const { data: devices, isLoading } = useQuery(trpc.device.all.queryOptions());
 
   const refreshData = () =>
     queryClient.invalidateQueries({
-      queryKey: trpc.template.all.queryKey(),
+      queryKey: trpc.device.all.queryKey(),
     });
 
   return (
     <>
       {isLoading ? (
         <div className="flex justify-center py-4">
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <Loader2Icon className="h-6 w-6 animate-spin" />
         </div>
-      ) : templates?.length === 0 ? (
+      ) : devices?.length === 0 ? (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <BookmarkIcon />
+              <RouterIcon />
             </EmptyMedia>
-            <EmptyTitle>No Templates Yet</EmptyTitle>
+            <EmptyTitle>No Devices Yet</EmptyTitle>
             <EmptyDescription>
-              Get started by creating your first template.
+              Get started by creating your first device.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <CreateTemplateDialog />
+            <CreateDeviceDialog />
           </EmptyContent>
         </Empty>
       ) : (
         <>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Templates</h1>
+              <h1 className="text-2xl font-bold">Devices</h1>
               <p className="text-muted-foreground leading-7">
                 Manage and organize your reusable device configurations.
               </p>
             </div>
 
             <div className="mt-2">
-              <CreateTemplateDialog />
+              <CreateDeviceDialog />
             </div>
           </div>
 
           {/* Table */}
-          <TemplatesTable data={templates ?? []} onActionSuccess={refreshData} />
+          <DevicesTable data={devices ?? []} onActionSuccess={refreshData} />
         </>
       )}
     </>

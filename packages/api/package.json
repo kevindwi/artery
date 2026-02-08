@@ -1,29 +1,32 @@
 {
-  "name": "@artery/api",
-  "type": "module",
-  "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
-  },
-  "scripts": {},
-  "devDependencies": {
-    "@artery/config": "workspace:*",
-    "@paralleldrive/cuid2": "^3.0.6",
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@artery/auth": "workspace:*",
-    "@artery/db": "workspace:*",
-    "@trpc/client": "catalog:",
-    "@trpc/server": "catalog:",
-    "@types/pg": "catalog:",
-    "dotenv": "catalog:",
-    "drizzle-orm": "catalog:",
-    "hono": "catalog:",
-    "zod": "catalog:"
-  }
+	"name": "@artery/api",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		},
+		"./services/*": {
+			"default": "./src/services/*.ts"
+		}
+	},
+	"scripts": {},
+	"devDependencies": {
+		"@artery/config": "workspace:*",
+		"@paralleldrive/cuid2": "^3.0.6",
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@artery/auth": "workspace:*",
+		"@artery/db": "workspace:*",
+		"@trpc/client": "catalog:",
+		"@trpc/server": "catalog:",
+		"@types/pg": "catalog:",
+		"dotenv": "catalog:",
+		"drizzle-orm": "catalog:",
+		"hono": "catalog:",
+		"zod": "catalog:"
+	}
 }

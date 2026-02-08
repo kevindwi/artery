@@ -20,16 +20,13 @@ import { PieChart } from "lucide-react";
 
 export const Route = createFileRoute("/(app)/app/")({
   component: RouteComponent,
-  // beforeLoad: async () => {
-  //   const session = await authClient.getSession();
-  //   if (!session.data) {
-  //     redirect({
-  //       to: "/login",
-  //       throw: true,
-  //     });
-  //   }
-  //   return { session };
-  // },
+  head: () => ({
+    meta: [
+      {
+        title: "Home | Artery",
+      },
+    ],
+  }),
 });
 
 const PROJECT_DATA = Array(6).fill({
@@ -39,17 +36,11 @@ const PROJECT_DATA = Array(6).fill({
 });
 
 function RouteComponent() {
-  // const { session } = Route.useRouteContext();
-
   const privateData = useQuery(trpc.privateData.queryOptions());
 
   return (
     <>
-      {/* <h1>Dashboard</h1> */}
-      {/* <p>Welcome {session.data?.user.name}</p> */}
-      {/* <p>API: {privateData.data?.message}</p> */}
-
-      {/* Section: Stats */}
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
           <StatCard
@@ -62,12 +53,10 @@ function RouteComponent() {
         ))}
       </div>
 
-      {/* Section: Main Chart */}
+      {/* Main Chart */}
       <ChartAreaInteractive />
 
-      {/*<ChartJsArea />*/}
-
-      {/* Section: Status Tables */}
+      {/* Status Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <StatusTable
           title="Project Status"
@@ -81,7 +70,7 @@ function RouteComponent() {
         />
       </div>
 
-      {/* Section: Data Table */}
+      {/* Data Table */}
       <Card className="gap-0 pb-0">
         <CardHeader className="flex items-center gap-2 space-y-0 [.border-b]:pb-4 border-b sm:flex-row">
           <div className="grid flex-1 gap-1">

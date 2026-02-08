@@ -37,6 +37,16 @@ export const templateService = {
         eq(template.id, templateId),
         eq(template.organizationId, organizationId),
       ),
+      with: {
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
     });
 
     if (!templateDetail) {
